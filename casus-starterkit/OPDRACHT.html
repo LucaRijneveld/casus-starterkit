@@ -1,0 +1,354 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Casus AI Engineer – Social Deal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --blauw:#1B84FF; --blauw-licht:#E9F3FF; --blauw-donker:#056EE9;
+    --groen:#17C653; --groen-licht:#DFFFEA;
+    --paars:#7239EA; --paars-licht:#F8F5FF;
+    --geel:#F6C000; --geel-licht:#FFF8DD;
+    --rood:#F8285A; --rood-licht:#FFEEF3;
+    --canvas:#F3F6F9; --wit:#ffffff; --rand:#F1F1F4; --rand-sterk:#DBDFE9;
+    --tekst:#071437; --tekst-2:#4B5675; --tekst-zacht:#78829D;
+    --radius:10px; --schaduw:0 3px 4px rgba(0,0,0,.03);
+  }
+  *{box-sizing:border-box}
+  html{font-size:13px}
+  body{margin:0;background:var(--canvas);color:var(--tekst-2);font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;line-height:1.6;-webkit-font-smoothing:antialiased}
+  a{color:var(--blauw)}
+  code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.92em;background:var(--canvas);color:var(--tekst);padding:.1em .4em;border-radius:5px;border:1px solid var(--rand);white-space:nowrap}
+  .wrap{max-width:1320px;margin:0 auto;padding:0 30px}
+
+  /* Kopbalk */
+  .balk{background:var(--blauw);color:#fff}
+  .balk .wrap{display:flex;align-items:center;gap:14px;height:70px}
+  .balk img,.balk svg{height:40px;width:auto;display:block}
+  .balk .merk{font-weight:600;font-size:1.25rem;letter-spacing:-.01em}
+  .balk .rechts{margin-left:auto;font-size:1rem;opacity:.9}
+  .menubalk{background:#fff;border-bottom:1px solid var(--rand)}
+  .menubalk .wrap{display:flex;gap:6px;height:52px;align-items:center;overflow-x:auto}
+  .menubalk a{color:var(--tekst-2);text-decoration:none;font-weight:500;padding:8px 12px;border-radius:6px;white-space:nowrap;font-size:1rem}
+  .menubalk a:hover,.menubalk a:focus-visible{background:var(--blauw-licht);color:var(--blauw);outline:none}
+
+  /* Toolbar */
+  .toolbar{padding:28px 0 22px}
+  .kruimel{font-size:.95rem;color:var(--tekst-zacht);margin:0 0 6px}
+  .kruimel span+span::before{content:"›";margin:0 8px;color:var(--rand-sterk)}
+  h1{margin:0;color:var(--tekst);font-size:1.85rem;font-weight:700;letter-spacing:-.02em;line-height:1.25}
+  .toolbar p{margin:6px 0 0;font-size:1.08rem}
+
+  /* Raster */
+  .raster{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:30px;align-items:start;padding-bottom:40px}
+  .hoofd{display:flex;flex-direction:column;gap:30px;min-width:0}
+  .zij{position:sticky;top:20px;display:flex;flex-direction:column;gap:30px}
+
+  /* Kaarten */
+  .kaart{background:var(--wit);border:1px solid var(--rand);border-radius:var(--radius);box-shadow:var(--schaduw);min-width:0}
+  .kaart-kop{padding:20px 28px;border-bottom:1px solid var(--rand)}
+  .kaart-kop h2{margin:0;color:var(--tekst);font-size:1.3rem;font-weight:600}
+  .kaart-kop .sub{margin:2px 0 0;font-size:1rem;color:var(--tekst-zacht)}
+  .kaart-body{padding:24px 28px}
+  .kaart-body > :first-child{margin-top:0}
+  .kaart-body > :last-child{margin-bottom:0}
+  p{margin:0 0 14px;font-size:1.08rem}
+  h3{color:var(--tekst);font-size:1.12rem;font-weight:600;margin:22px 0 10px}
+  ul,ol{margin:0 0 14px;padding-left:22px;font-size:1.08rem}
+  li{margin:0 0 6px}
+  li::marker{color:var(--tekst-zacht)}
+  strong{color:var(--tekst);font-weight:600}
+
+  /* Melding */
+  .melding{display:flex;gap:14px;align-items:flex-start;border:1px dashed var(--blauw);background:var(--blauw-licht);border-radius:var(--radius);padding:16px 20px}
+  .melding.geel{border-color:var(--geel);background:var(--geel-licht)}
+  .melding .ico{flex:0 0 32px;height:32px;border-radius:8px;background:var(--blauw);color:#fff;display:grid;place-items:center;font-weight:700}
+  .melding.geel .ico{background:var(--geel);color:var(--tekst)}
+  .melding p{margin:0}
+
+  /* Delen */
+  .delen{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin:18px 0 0}
+  .deel{border:1px dashed var(--rand-sterk);border-radius:var(--radius);padding:16px 18px}
+  .deel .nr{display:inline-block;font-size:.9rem;font-weight:600;border-radius:6px;padding:2px 9px;margin-bottom:8px}
+  .deel h4{margin:0 0 4px;color:var(--tekst);font-size:1.08rem;font-weight:600}
+  .deel p{margin:0;font-size:1rem}
+  .nr.b{background:var(--blauw-licht);color:var(--blauw-donker)}
+  .nr.g{background:var(--groen-licht);color:#04B440}
+  .nr.p{background:var(--paars-licht);color:var(--paars)}
+  .sectie-deel{border-top:1px dashed var(--rand-sterk);margin-top:22px;padding-top:4px}
+  .sectie-deel h3{display:flex;align-items:center;gap:10px}
+  .bedrag{display:inline-block;background:var(--groen-licht);color:#04B440;font-weight:700;border-radius:6px;padding:0 8px}
+
+  /* Tabellen */
+  .tabel-wrap{overflow-x:auto;margin:0 0 16px;border:1px solid var(--rand);border-radius:8px}
+  table{width:100%;border-collapse:collapse;font-size:1rem}
+  th{text-align:left;color:var(--tekst-zacht);font-weight:600;text-transform:uppercase;font-size:.85rem;letter-spacing:.03em;padding:12px 16px;border-bottom:1px solid var(--rand);background:#FCFCFC;white-space:nowrap}
+  td{padding:12px 16px;border-bottom:1px dashed var(--rand);vertical-align:top;color:var(--tekst-2)}
+  tr:last-child td{border-bottom:0}
+  td.naam{color:var(--tekst);font-weight:600;white-space:nowrap}
+  td.getal{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+  th.getal{text-align:right}
+  td code{white-space:normal}
+  .keten{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:0 0 6px}
+  .keten span.pijl{color:var(--tekst-zacht)}
+
+  /* Inleverlijst */
+  .lever{list-style:none;padding:0;margin:0;counter-reset:l}
+  .lever li{counter-increment:l;display:flex;gap:14px;padding:12px 0;border-bottom:1px dashed var(--rand);margin:0}
+  .lever li:last-child{border-bottom:0}
+  .lever li::before{content:counter(l);flex:0 0 28px;height:28px;border-radius:8px;background:var(--blauw-licht);color:var(--blauw-donker);font-weight:600;display:grid;place-items:center;font-size:.95rem}
+
+  /* Zijkaart */
+  .feit{display:flex;justify-content:space-between;gap:12px;padding:11px 0;border-bottom:1px dashed var(--rand);font-size:1.02rem}
+  .feit:last-child{border-bottom:0}
+  .feit .l{color:var(--tekst-zacht)}
+  .feit .w{color:var(--tekst);font-weight:600;text-align:right}
+  .badge{display:inline-block;font-size:.9rem;font-weight:600;border-radius:6px;padding:2px 9px}
+  .badge.b{background:var(--blauw-licht);color:var(--blauw-donker)}
+  .badge.g{background:var(--groen-licht);color:#04B440}
+  .badge.y{background:var(--geel-licht);color:#8a6a00}
+  .bestanden{list-style:none;padding:0;margin:0}
+  .bestanden li{display:flex;gap:12px;align-items:center;padding:10px 0;border-bottom:1px dashed var(--rand);margin:0;font-size:1rem}
+  .bestanden li:last-child{border-bottom:0}
+  .bestand-ico{flex:0 0 36px;height:36px;border-radius:8px;display:grid;place-items:center;font-size:.72rem;font-weight:700}
+  .bestanden .t{display:block;color:var(--tekst);font-weight:600}
+  .bestanden .s{display:block;color:var(--tekst-zacht);font-size:.92rem}
+
+  .slot{text-align:center;padding:34px 28px}
+  .slot p{margin:0;color:var(--tekst);font-size:1.45rem;font-weight:700;letter-spacing:-.01em}
+  .slot .s{margin-top:6px;font-size:1.05rem;color:var(--tekst-zacht);font-weight:400}
+
+  footer{padding:20px 0 30px;color:var(--tekst-zacht);font-size:.95rem}
+
+  @media (max-width:991px){
+    .raster{grid-template-columns:minmax(0,1fr)}
+    .zij{position:static;order:-1}
+  }
+  @media (max-width:767px){
+    html{font-size:12px}
+    .wrap{padding:0 16px}
+    .balk .wrap{height:55px}
+    .balk img,.balk svg{height:35px}
+    .balk .rechts{display:none}
+    .kaart-kop,.kaart-body{padding-left:18px;padding-right:18px}
+    .delen{grid-template-columns:minmax(0,1fr)}
+    .raster,.hoofd,.zij{gap:20px}
+  }
+  @media print{
+    body{background:#fff}
+    .menubalk,.zij{display:none}
+    .raster{grid-template-columns:1fr}
+    .kaart{box-shadow:none;break-inside:avoid-page}
+    .balk{print-color-adjust:exact;-webkit-print-color-adjust:exact}
+  }
+  :focus-visible{outline:2px solid var(--blauw);outline-offset:2px}
+</style>
+</head>
+<body>
+
+<header class="balk">
+  <div class="wrap">
+    <svg focusable="false" xmlns="http://www.w3.org/2000/svg" width="400" height="400" viewBox="0 0 400 400" role="img" aria-label="Social Deal"><path fill="#ffffff" d="M166.5 1.1c-29.4 3-53.3 9.4-76 20.4C37.4 47.2 7.9 95.8.9 169.4c-1.7 17.9-.6 61.7 1.9 78.1 9.8 63 37.7 105.7 85 129.8 18.5 9.5 42.1 16.6 67.7 20.4 17.6 2.6 70.6 2.6 89-.1 82.1-11.7 131-54.4 148.8-130.1 5.3-22.2 6.2-32.3 6.2-67.5 0-26-.4-34.9-1.8-44.5-6.8-45.9-22.2-80-47.7-105.5-28-27.9-66.2-43.8-117.9-49-11.9-1.2-53.8-1.1-65.6.1zm91.7 71c21.1 4.4 35.7 25.8 31.9 46.6-1.7 9.1-6.2 17.3-13.2 23.8-8.3 7.6-14.6 9.9-27.4 10-9.2 0-10.5-.3-16.7-3.2-8.8-4.1-16-11.3-20.1-20.1-3-6.2-3.2-7.5-3.2-17.2 0-9.9.2-11 3.3-17.2 8.7-17.7 26.6-26.6 45.4-22.7zm-68.8 2.1c1.4 2 1.6 11.2 1.6 79.9 0 72.7-.1 77.7-1.7 79.1-2.9 2.5-5 2.8-11 1.7-32.4-5.7-58-29.1-66.4-60.5-2.8-10.2-3-29.7-.6-39.6 5-20.3 17.3-38.1 34.1-49.2 12.7-8.5 26.3-13.4 37.3-13.5 4.3-.1 5.5.3 6.7 2.1zm40.6 92.9c26.2 6.9 47.9 27.7 56.6 54.4 3.2 9.7 4.4 29.1 2.5 40.1-3.3 18.7-14.7 37.3-30.6 50-15.2 12.1-42.7 20.3-48.1 14.3-1.8-2-1.9-4.8-1.9-79.6v-77.5l2.8-2.4c3.2-2.7 5.7-2.6 18.7.7zm-66.9 81.5c20.5 6.1 32.8 26.6 28.5 47.4-3.6 17-16.1 29-33.6 32.2-17.2 3.2-35.5-6.5-43.3-22.9-3-6.4-3.2-7.5-3.2-17.8 0-10 .3-11.5 2.8-16.6 9.1-18.6 29.6-28 48.8-22.3z"/></svg>
+
+    <span class="merk">Social Deal</span>
+    <span class="rechts">Werken bij het AI-team</span>
+  </div>
+</header>
+<nav class="menubalk" aria-label="Onderdelen van de casus">
+  <div class="wrap">
+    <a href="#waarom">Waarom</a>
+    <a href="#opdracht">De opdracht</a>
+    <a href="#dataset">De dataset</a>
+    <a href="#inleveren">Inleveren</a>
+    <a href="#spelregels">Spelregels</a>
+    <a href="#gesprek">Het gesprek</a>
+  </div>
+</nav>
+
+<main class="wrap">
+  <div class="toolbar">
+    <p class="kruimel"><span>Recruitment</span><span>AI Engineer</span><span>Casus</span></p>
+    <h1>Casus AI Engineer</h1>
+    <p>Bouw een MCP-tool, onderzoek de data en test hoe Claude ermee omgaat.</p>
+  </div>
+
+  <div class="raster">
+    <div class="hoofd">
+
+      <section class="kaart" id="waarom" aria-labelledby="h-waarom">
+        <div class="kaart-kop"><h2 id="h-waarom">Waarom deze casus</h2></div>
+        <div class="kaart-body">
+          <p>Bouw je één MCP-tool waarmee Claude een omzetvraag veilig en correct beantwoordt. Dat is precies het werk van je eerste maanden bij ons.</p>
+          <p>Social Deal verkoopt deals van lokale partners (restaurants, uitjes, wellness) in Nederland en België. Wij bouwen interne AI-tools waarmee collega's in gewoon Nederlands vragen over data kunnen stellen aan Claude, bijvoorbeeld "wat was de omzet per stad in september?". Claude haalt het antwoord dan op via tools die met de juiste definities rekenen.</p>
+          <p>In deze casus zien we hoe jij vier dingen combineert: een goede tool voor een LLM ontwerpen, SQL op rommelige data, data-kwaliteit en veiligheid.</p>
+          <div class="melding">
+            <div class="ico" aria-hidden="true">i</div>
+            <p><strong>Let op:</strong> de dataset, de tabellen en de regels in deze casus zijn speciaal hiervoor verzonnen. Ze bevatten geen echte gegevens van Social Deal, en ze zijn geen kopie van onze echte database.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="kaart" id="opdracht" aria-labelledby="h-opdracht">
+        <div class="kaart-kop"><h2 id="h-opdracht">De opdracht</h2><p class="sub">Drie delen, samen ongeveer 2 uur</p></div>
+        <div class="kaart-body">
+          <p>De casus heeft drie delen. In deel 1 bouw je een kleine MCP-server met één tool, <code>omzet_per_stad</code>, op de SQLite-database uit de starterkit. In deel 2 zoek je uit waarom jouw getal afwijkt van dat van finance. In deel 3 test je hoe Claude met jouw tool omgaat, en verbeter je de tool op basis daarvan.</p>
+          <div class="delen">
+            <div class="deel"><span class="nr b">Deel 1</span><h4>De tool bouwen</h4><p>Een MCP-tool die de omzet per stad juist en veilig berekent.</p></div>
+            <div class="deel"><span class="nr g">Deel 2</span><h4>Het verschil met finance</h4><p>Verklaar tot op de cent waarom de getallen afwijken.</p></div>
+            <div class="deel"><span class="nr p">Deel 3</span><h4>Claude testen</h4><p>Vijf vragen: wat ging er mis, en wat verbeterde je?</p></div>
+          </div>
+
+          <div class="sectie-deel">
+            <h3><span class="nr b badge">Deel 1</span> De tool bouwen</h3>
+            <ul>
+              <li>Invoer: <code>van</code> (datum), <code>tot</code> (datum) en optioneel <code>land</code> (<code>NL</code> of <code>BE</code>).</li>
+              <li>Uitvoer: per stad de naam, het land, de omzet in euro en het aantal verkochte vouchers, gesorteerd op omzet (hoog naar laag).</li>
+              <li>Een collega moet de uitkomst zonder uitleg kunnen begrijpen en kunnen vergelijken met finance.</li>
+            </ul>
+            <p><strong>Wat de tool in elk geval moet doen</strong></p>
+            <ol>
+              <li><strong>Juist rekenen.</strong> Volg de regels uit de beschrijving van de dataset (hieronder). Het juiste getal is belangrijker dan een mooi antwoord.</li>
+              <li><strong>Veilig zijn.</strong> Alleen lezen, geen persoonsgegevens in de uitvoer of in logs, en onzinnige invoer netjes weigeren (bijvoorbeeld <code>tot</code> vóór <code>van</code>, of een periode langer dan 1 jaar).</li>
+              <li><strong>Goed bruikbaar zijn voor een LLM.</strong> Schrijf de naam, beschrijving en parameters van de tool zo dat Claude hem op het juiste moment en met de juiste invoer aanroept.</li>
+              <li><strong>Getest zijn.</strong> Laat met tests zien dat de bedrijfsregels en de veiligheidsregels kloppen.</li>
+            </ol>
+            <p><strong>Vrije keuze.</strong> Python met de officiële MCP SDK heeft onze voorkeur, maar een andere taal met een MCP SDK mag ook. Transport (stdio of HTTP) en structuur kies je zelf.</p>
+          </div>
+
+          <div class="sectie-deel">
+            <h3><span class="nr g badge">Deel 2</span> Het verschil met finance</h3>
+            <p>Finance rapporteert voor augustus 2026 (1 t/m 31 augustus, alle landen) een omzet van <span class="bedrag">€&nbsp;34.615,53</span> en 5.086 verkochte vouchers. Jouw tool geeft waarschijnlijk een ander getal. Zoek uit waar het verschil vandaan komt en verklaar het tot op de cent.</p>
+            <p>Laat zien hóé je het hebt uitgezocht (queries, stappen), niet alleen de conclusie.</p>
+          </div>
+
+          <div class="sectie-deel">
+            <h3><span class="nr p badge">Deel 3</span> Claude testen met jouw tool</h3>
+            <p>Een tool is pas goed als Claude hem goed gebruikt. Bedenk 5 vragen in gewoon Nederlands die een collega zou kunnen stellen, ook vage of lastige, zoals "hoe deden we het vorige maand?" of "wat was de omzet in Bergen?". Stel ze aan Claude (of een ander LLM) met jouw tool gekoppeld.</p>
+            <p>Noteer per vraag wat Claude deed, of het antwoord klopte, en wat je daarna aanpaste aan de naam, beschrijving of parameters van de tool. Er is geen goed of fout aantal: we willen zien hoe je kijkt en verbetert.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="kaart" id="dataset" aria-labelledby="h-dataset">
+        <div class="kaart-kop"><h2 id="h-dataset">De dataset</h2><p class="sub"><code>socialdeal_casus.sqlite</code> · 13 MB · okt 2024 t/m sep 2026</p></div>
+        <div class="kaart-body">
+          <p>De starterkit bevat een verzonnen dataset met 4 tabellen en ongeveer 97.000 verkopen. Net als echte data is deze data niet overal netjes. Welke problemen erin zitten, zoek je zelf uit.</p>
+          <div class="tabel-wrap">
+            <table>
+              <thead><tr><th scope="col">Tabel</th><th scope="col" class="getal">Rijen</th><th scope="col">Belangrijkste kolommen</th></tr></thead>
+              <tbody>
+                <tr><td class="naam"><code>steden</code></td><td class="getal">34</td><td><code>id</code>, <code>naam</code>, <code>land</code> (NL/BE), <code>regio</code></td></tr>
+                <tr><td class="naam"><code>partners</code></td><td class="getal">613</td><td><code>id</code>, <code>naam</code>, <code>stad_id</code>, <code>is_test</code></td></tr>
+                <tr><td class="naam"><code>deals</code></td><td class="getal">2.444</td><td><code>id</code>, <code>partner_id</code>, <code>titel</code>, <code>start_datum</code>, <code>eind_datum</code>, <code>prijs_cent</code>, <code>commissie_pct</code></td></tr>
+                <tr><td class="naam"><code>verkopen</code></td><td class="getal">96.947</td><td><code>id</code>, <code>deal_id</code>, <code>aangemaakt_op</code>, <code>verwerkt_op</code>, <code>status</code>, <code>aantal</code>, <code>klantprijs_cent</code>, <code>commissie_cent</code>, <code>klant_email</code>, <code>betaalreferentie</code></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p><strong>Koppeling</strong></p>
+          <div class="keten"><code>verkopen.deal_id</code><span class="pijl">→</span><code>deals.id</code><span class="pijl">·</span><code>deals.partner_id</code><span class="pijl">→</span><code>partners.id</code><span class="pijl">·</span><code>partners.stad_id</code><span class="pijl">→</span><code>steden.id</code></div>
+
+          <h3>Regels voor deze casus</h3>
+          <ul>
+            <li><strong>Omzet = commissie.</strong> Omzet is wat Social Deal verdient: de som van <code>commissie_cent</code>. Het bedrag dat de klant betaalt (<code>klantprijs_cent</code>) is géén omzet.</li>
+            <li>Alleen verkopen met status <em>betaald</em> tellen mee. <em>Geannuleerd</em> en <em>terugbetaald</em> tellen niet mee.</li>
+            <li>Een verkoop hoort bij de periode van <code>aangemaakt_op</code> (het moment van kopen), niet van <code>verwerkt_op</code>.</li>
+            <li>Finance rekent in Nederlandse tijd (Europe/Amsterdam) met periodes van begindatum tot en met einddatum.</li>
+            <li>Eén verkoopregel kan meerdere vouchers bevatten (<code>aantal</code>). <code>klantprijs_cent</code> en <code>commissie_cent</code> zijn al het totaal van de regel.</li>
+            <li>Een verkoop hoort bij de stad van de partner.</li>
+            <li>Testpartners (<code>is_test = 1</code>) tellen nooit mee.</li>
+            <li>Bedragen staan in centen als gehele getallen.</li>
+          </ul>
+
+          <div class="melding geel">
+            <div class="ico" aria-hidden="true">!</div>
+            <p><strong>Persoonsgegevens.</strong> <code>klant_email</code> en <code>betaalreferentie</code> mogen nooit in de uitvoer van een tool, in een foutmelding of in een log terechtkomen.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="kaart" id="inleveren" aria-labelledby="h-inleveren">
+        <div class="kaart-kop"><h2 id="h-inleveren">Wat we van je ontvangen</h2><p class="sub">Eén Git-repository (link naar GitHub/GitLab of een zip)</p></div>
+        <div class="kaart-body">
+          <ol class="lever">
+            <li><div><strong>Code en tests</strong> van de MCP-server en de tool. De tests draaien we met één commando.</div></li>
+            <li><div><strong>Uitkomst voor september 2026</strong>: de uitvoer van je tool voor 1 t/m 30 september 2026, alle landen, als tekst of CSV.</div></li>
+            <li><div><strong>Verklaring van het verschil met finance</strong> (deel 2): kort, met de stappen die je zette.</div></li>
+            <li><div><strong>Testverslag</strong> (deel 3): je 5 vragen, wat Claude deed, wat er misging en wat je aanpaste.</div></li>
+            <li><div><strong>README</strong> (max. 1 pagina): hoe we het starten, welke problemen je in de data vond en hoe, en welke AI-tools je gebruikte en waarvoor.</div></li>
+          </ol>
+        </div>
+      </section>
+
+      <section class="kaart" id="spelregels" aria-labelledby="h-spelregels">
+        <div class="kaart-kop"><h2 id="h-spelregels">Spelregels</h2></div>
+        <div class="kaart-body">
+          <ul>
+            <li><strong>Tijd:</strong> reken op ongeveer 2 uur en besteed er niet meer dan 3 uur aan. Lukt niet alles, schrijf dan in je README wat je zou doen. Een kleinere oplossing die klopt is beter dan een grote die net niet klopt.</li>
+            <li><strong>Inleveren:</strong> binnen 7 dagen nadat je de casus ontvangt, per mail aan Rami Alkadi (<a href="mailto:rami@socialdeal.nl">rami@socialdeal.nl</a>).</li>
+            <li><strong>AI mag.</strong> Gebruik Claude, Copilot of wat je normaal ook gebruikt. Wel moet je elke regel code kunnen uitleggen en verdedigen in het gesprek.</li>
+            <li><strong>Vragen stellen mag.</strong> Is iets onduidelijk, mail dan. Kun je niet wachten, maak dan een aanname en zet die in je README.</li>
+            <li><strong>Vertrouwelijk:</strong> de dataset is verzonnen, maar deel de casus en je oplossing niet publiek. Een privé-repository is prima.</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="kaart" id="gesprek" aria-labelledby="h-gesprek">
+        <div class="kaart-kop"><h2 id="h-gesprek">Het gesprek daarna</h2><p class="sub">60 minuten met Rami en een developer</p></div>
+        <div class="kaart-body">
+          <div class="tabel-wrap">
+            <table>
+              <thead><tr><th scope="col">Onderdeel</th><th scope="col" class="getal">Tijd</th><th scope="col">Wat er gebeurt</th></tr></thead>
+              <tbody>
+                <tr><td class="naam">Demo</td><td class="getal">10 min</td><td>Je laat de tool werken in een MCP-client en stelt zelf een paar vragen.</td></tr>
+                <tr><td class="naam">Code en keuzes</td><td class="getal">15 min</td><td>Je legt je keuzes uit; wij vragen door op tests, veiligheid en de regels.</td></tr>
+                <tr><td class="naam">Data en finance</td><td class="getal">10 min</td><td>Je laat zien hoe je de problemen in de data en het verschil met finance hebt gevonden.</td></tr>
+                <tr><td class="naam">Live aanpassing</td><td class="getal">15 min</td><td>We vragen een wijziging die je ontwerp raakt, bijvoorbeeld omzet per week, of per regio voor België. Je begint zonder AI; daarna mag je AI gebruiken.</td></tr>
+                <tr><td class="naam">Naar productie + jouw vragen</td><td class="getal">10 min</td><td>We bespreken samen hoe je deze tool naar productie zou brengen, en alles wat jij over het team wilt weten.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section class="kaart slot" aria-label="Afsluiting">
+        <p>Veel succes, en tot snel!</p>
+        <p class="s">Het AI-team van Social Deal</p>
+      </section>
+
+    </div>
+
+    <aside class="zij" aria-label="In het kort">
+      <section class="kaart" aria-labelledby="h-kort">
+        <div class="kaart-kop"><h2 id="h-kort">In het kort</h2></div>
+        <div class="kaart-body">
+          <div class="feit"><span class="l">Functie</span><span class="w">AI Engineer</span></div>
+          <div class="feit"><span class="l">Tijd</span><span class="w">ca. 2 uur <span class="badge y">max. 3</span></span></div>
+          <div class="feit"><span class="l">Inleveren</span><span class="w">binnen 7 dagen</span></div>
+          <div class="feit"><span class="l">Taal</span><span class="w">Python (voorkeur)</span></div>
+          <div class="feit"><span class="l">AI-tools</span><span class="w"><span class="badge g">Toegestaan</span></span></div>
+          <div class="feit"><span class="l">Contact</span><span class="w"><a href="mailto:rami@socialdeal.nl">Rami Alkadi</a></span></div>
+        </div>
+      </section>
+      <section class="kaart" aria-labelledby="h-kit">
+        <div class="kaart-kop"><h2 id="h-kit">Starterkit</h2></div>
+        <div class="kaart-body">
+          <ul class="bestanden">
+            <li><span class="bestand-ico" style="background:var(--blauw-licht);color:var(--blauw-donker)">DB</span><span><span class="t">socialdeal_casus.sqlite</span><span class="s">Verzonnen dataset · 13 MB</span></span></li>
+            <li><span class="bestand-ico" style="background:var(--paars-licht);color:var(--paars)">MD</span><span><span class="t">LEESMIJ.md</span><span class="s">Naslag bij de dataset</span></span></li>
+            <li><span class="bestand-ico" style="background:var(--rood-licht);color:var(--rood)">PDF</span><span><span class="t">OPDRACHT.pdf</span><span class="s">Deze opdracht, om te printen</span></span></li>
+          </ul>
+        </div>
+      </section>
+    </aside>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap">© 2026 Social Deal · Casus AI Engineer · vertrouwelijk</div>
+</footer>
+</body>
+</html>

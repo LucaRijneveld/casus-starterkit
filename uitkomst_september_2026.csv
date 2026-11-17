@@ -1,0 +1,36 @@
+stad,regio,land,omzet_eur,vouchers
+Utrecht,Utrecht,NL,4799.03,402
+Rotterdam,Zuid-Holland,NL,2880.14,437
+Amsterdam,Noord-Holland,NL,2315.61,452
+Den Haag,Zuid-Holland,NL,2100.19,448
+Eindhoven,Noord-Brabant,NL,2030.92,380
+Gent,Oost-Vlaanderen,BE,1825.29,301
+Brussel,Brussel,BE,1688.11,224
+Antwerpen,Antwerpen,BE,1484.93,343
+Bergen,Noord-Holland,NL,1197.01,116
+Laren,Noord-Holland,NL,925.88,118
+Bergen,Henegouwen,BE,885.18,113
+Nijmegen,Gelderland,NL,734.09,72
+Brugge,West-Vlaanderen,BE,689.10,102
+Enschede,Overijssel,NL,637.73,50
+Zwolle,Overijssel,NL,628.94,51
+Arnhem,Gelderland,NL,599.84,99
+Amersfoort,Utrecht,NL,595.42,73
+Haarlem,Noord-Holland,NL,556.47,85
+Tilburg,Noord-Brabant,NL,484.82,58
+Laren,Gelderland,NL,436.55,55
+Oostende,West-Vlaanderen,BE,422.20,69
+Groningen,Groningen,NL,407.75,86
+Leuven,Vlaams-Brabant,BE,377.62,39
+Leiden,Zuid-Holland,NL,370.11,82
+Apeldoorn,Gelderland,NL,346.62,41
+Maastricht,Limburg,NL,340.83,39
+Den Bosch,Noord-Brabant,NL,218.69,76
+Liège,Luik,BE,163.88,31
+Mechelen,Antwerpen,BE,143.84,16
+Kortrijk,West-Vlaanderen,BE,112.30,18
+Hasselt,Limburg,BE,98.89,11
+Almere,Flevoland,NL,78.89,44
+Breda,Noord-Brabant,NL,34.97,13
+Deventer,Overijssel,NL,4.99,1
+TOTAAL,,,30616.83,4545
