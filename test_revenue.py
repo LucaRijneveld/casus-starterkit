@@ -11,7 +11,7 @@ engine_src = engine  # Use the engine from sqldatabase.py (socialdeal_casus.sqli
 engine_clean = create_engine(f"sqlite:///{Path(__file__).parent / 'socialdeal_clean.sqlite'}")  # Use this engine for the cleaned up database
 
 def test_data_context():
-    """Test if the business context file exists and is readable."""
+    """Ik controleer of mijn business context bestaat en leesbaar is."""
     context_file = Path(__file__).parent / "business_context.md"
     assert context_file.exists(), "Business context file does not exist."
     assert context_file.is_file(), "Business context path is not a file."
@@ -21,7 +21,7 @@ def test_data_context():
 
 # All Source database tests are below. Including tool function tests.
 def test_src_database_connection():
-    """Test if the database connection can be established."""
+    """Ik controleer of ik verbinding kan maken met de brondatabase."""
     try:
         with Session(engine_src) as session:
             # Execute a simple query to test the connection
@@ -31,35 +31,35 @@ def test_src_database_connection():
         pytest.fail(f"Database connection failed: {e}")
 
 def test_src_Stad_table_count():
-    """Test if the Stad table exists and has rows."""
+    """Ik controleer of de tabel `steden` bestaat en rijen bevat."""
     with Session(engine_src) as session:
         result = session.execute(text("SELECT COUNT(*) FROM steden;"))
         count = result.scalar()
         assert count > 0, "Table 'steden' is empty."
 
 def test_src_Partner_table_count():
-    """Test if the Partner table exists and has rows."""
+    """Ik controleer of de tabel `partners` bestaat en rijen bevat."""
     with Session(engine_src) as session:
         result = session.execute(text("SELECT COUNT(*) FROM partners;"))
         count = result.scalar()
         assert count > 0, "Table 'partners' is empty."  
 
 def test_src_Deal_table_count():
-    """Test if the Deal table exists and has rows."""
+    """Ik controleer of de tabel `deals` bestaat en rijen bevat."""
     with Session(engine_src) as session:
         result = session.execute(text("SELECT COUNT(*) FROM deals;"))
         count = result.scalar()
         assert count > 0, "Table 'deals' is empty."
 
 def test_src_Verkoop_table_count():
-    """Test if the Verkoop table exists and has rows."""
+    """Ik controleer of de tabel `verkopen` bestaat en rijen bevat."""
     with Session(engine_src) as session:
         result = session.execute(text("SELECT COUNT(*) FROM verkopen;"))
         count = result.scalar()
         assert count > 0, "Table 'verkopen' is empty."
 
 def  test_exploratory_data_analysis():
-    """Test if the exploratory data analysis tool runs without errors."""
+    """Ik controleer of mijn EDA-tool zonder fouten draait."""
     from revenue import exploratory_data_analysis
     try:
         result = exploratory_data_analysis()
@@ -68,7 +68,7 @@ def  test_exploratory_data_analysis():
         pytest.fail(f"Exploratory data analysis tool failed: {e}")
 
 def test_exploratory_data_analysis_omits_sensitive_sample_values():
-    """EDA samples should not expose customer emails or payment references."""
+    """Ik controleer dat EDA geen e-mailadressen of betaalreferenties toont."""
     import revenue
 
     test_engine = create_engine("sqlite://")
@@ -94,7 +94,7 @@ def test_exploratory_data_analysis_omits_sensitive_sample_values():
     assert "betaald" in result
 
 def test_src_sql_query_tool():
-    """Test if the SQL query tool runs without errors."""
+    """Ik controleer of de querytool voor de brondatabase werkt."""
     from revenue import src_sql
     test_query = "SELECT 1"
     try:
@@ -105,7 +105,7 @@ def test_src_sql_query_tool():
       
 # All Clean database tests are below. Including tool function tests.  
 def test_clean_database_connection():
-    """Test if the clean database connection can be established."""
+    """Ik controleer of ik verbinding kan maken met de clean database."""
     try:
         with Session(engine_clean) as session:
             # Execute a simple query to test the connection
@@ -115,35 +115,35 @@ def test_clean_database_connection():
         pytest.fail(f"Clean database connection failed: {e}")
 
 def test_clean_Stad_table_count():
-    """Test if the Stad table exists and has rows in the clean database."""
+    """Ik controleer of `clean_steden` bestaat en rijen bevat."""
     with Session(engine_clean) as session:
         result = session.execute(text("SELECT COUNT(*) FROM clean_steden;"))
         count = result.scalar()
         assert count > 0, "Table 'clean_steden' is empty."
 
 def test_clean_Partner_table_count():
-    """Test if the Partner table exists and has rows in the clean database."""
+    """Ik controleer of `clean_partners` bestaat en rijen bevat."""
     with Session(engine_clean) as session:
         result = session.execute(text("SELECT COUNT(*) FROM clean_partners;"))
         count = result.scalar()
         assert count > 0, "Table 'clean_partners' is empty."
 
 def test_clean_Deal_table_count():
-    """Test if the Deal table exists and has rows in the clean database."""
+    """Ik controleer of `clean_deals` bestaat en rijen bevat."""
     with Session(engine_clean) as session:
         result = session.execute(text("SELECT COUNT(*) FROM clean_deals;"))
         count = result.scalar()
         assert count > 0, "Table 'clean_deals' is empty."
 
 def test_clean_Verkoop_table_count():
-    """Test if the Verkoop table exists and has rows in the clean database."""
+    """Ik controleer of `clean_verkopen` bestaat en rijen bevat."""
     with Session(engine_clean) as session:
         result = session.execute(text("SELECT COUNT(*) FROM clean_verkopen;"))
         count = result.scalar()
         assert count > 0, "Table 'clean_verkopen' is empty."
 
 def test_clean_sql_query_tool():
-    """Test if the SQL query tool runs without errors on the clean database."""
+    """Ik controleer of de querytool voor de clean database werkt."""
     from revenue import sql_query_tool
     test_query = "SELECT 1"
     try:
@@ -153,7 +153,7 @@ def test_clean_sql_query_tool():
         pytest.fail(f"SQL query tool failed on clean database: {e}")
 
 def test_omzet_per_stad_tool():
-    """Test if the omzet_per_stad tool runs without errors."""
+    """Ik controleer of mijn tool voor omzet per stad werkt."""
     from revenue import omzet_per_stad
     try:
         result = omzet_per_stad(start_date="2025-01-01", end_date="2025-12-31")
@@ -162,7 +162,7 @@ def test_omzet_per_stad_tool():
         pytest.fail(f"Omzet per stad tool failed: {e}")
 
 def test_omzet_per_partner_tool():
-    """Test if the omzet_per_partner tool runs without errors."""
+    """Ik controleer of mijn tool voor omzet per partner werkt."""
     from revenue import omzet_per_partner
     try:
         result = omzet_per_partner(start_date="2025-01-01", end_date="2025-12-31")
@@ -171,7 +171,7 @@ def test_omzet_per_partner_tool():
         pytest.fail(f"Omzet per partner tool failed: {e}")
 
 def test_partner_revenue_reports_show_id_and_combined_name_city_totals():
-    """Duplicate partner names should have separate-ID and combined-name views."""
+    """Ik controleer of dubbele partnernamen apart en samengevoegd terugkomen."""
     import cleandatabase
     import revenue
 
@@ -238,7 +238,7 @@ def test_partner_revenue_reports_show_id_and_combined_name_city_totals():
         assert "Duplicate Partner\tUtrecht\t35020" in result
         
 def test_zoek_stad_tool():
-    """Test if the zoek_stad tool runs without errors."""
+    """Ik controleer of mijn zoektool voor steden werkt."""
     from revenue import zoek_stad
     test_stad = "Amsterdam"
     try:
@@ -249,7 +249,7 @@ def test_zoek_stad_tool():
         pytest.fail(f"Zoek stad tool failed: {e}")  
         
 def test_zoek_partner_tool():
-    """Test if the zoek_partner tool runs without errors."""
+    """Ik controleer of mijn zoektool voor partners werkt."""
     from revenue import zoek_partner
     with Session(engine_clean) as session:
         test_partner = session.execute(
@@ -263,7 +263,7 @@ def test_zoek_partner_tool():
         pytest.fail(f"Zoek partner tool failed: {e}")
 
 def test_beschikbare_periode_tool():
-    """Test if the beschikbare_periode tool runs without errors."""
+    """Ik controleer of mijn tool de beschikbare periode teruggeeft."""
     from revenue import beschikbare_periode
     try:
         result = beschikbare_periode()
@@ -272,7 +272,7 @@ def test_beschikbare_periode_tool():
         pytest.fail(f"Beschikbare periode tool failed: {e}")
         
 def test_omzet_per_maand_tool():
-    """Test if the omzet_per_maand tool runs without errors."""
+    """Ik controleer of mijn tool voor omzet per maand werkt."""
     from revenue import omzet_per_maand
     test_start_date = "2025-01-01"
     test_end_date = "2025-12-31"
@@ -283,7 +283,7 @@ def test_omzet_per_maand_tool():
         pytest.fail(f"Omzet per maand tool failed: {e}")   
 
 def test_vergelijk_periode_tool():
-    """Test if the vergelijk_periode tool runs without errors."""
+    """Ik controleer of mijn tool twee periodes kan vergelijken."""
     from revenue import vergelijk_periode
     test_start_date1 = "2025-01-01"
     test_end_date1 = "2025-06-30"
@@ -296,7 +296,7 @@ def test_vergelijk_periode_tool():
         pytest.fail(f"Vergelijk periode tool failed: {e}")
         
 def test_top_partners_tool():
-    """Test if the top_partners tool runs without errors."""
+    """Ik controleer of mijn tool de top-partners kan tonen."""
     from revenue import top_partners
     test_start_date = "2025-01-01"
     test_end_date = "2025-12-31"
@@ -307,7 +307,7 @@ def test_top_partners_tool():
         pytest.fail(f"Top partners tool failed: {e}")   
 
 def test_reconciliate_clean_tool():
-    """Check clean revenue baseline and report-error scenarios."""
+    """Ik controleer de clean-omzet en de verschillen met andere rapportageregels."""
     from revenue import reconciliate_clean
     test_start_date = "2025-01-01"
     test_end_date = "2025-12-31"

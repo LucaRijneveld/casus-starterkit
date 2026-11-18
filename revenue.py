@@ -9,7 +9,7 @@ import cleandatabase
 
 
 class mcp(FastMCP):
-    """Concrete FastMCP subclass with a useful fallback implementation for abstract hooks."""
+    """Deze FastMCP-subklasse levert de serverinformatie en tools."""
 
     def __init__(self, name: str):
         super().__init__(name)
@@ -74,16 +74,11 @@ def _partner_revenue_query(start_date: str, end_date: str, separate_by_id: bool)
 
 @mcp.tool()
 def data_context() -> str:
-    """This tool provides a data context summary
-    it explains what the data means, what is available in the database, and how we
-    interpret the data. It also provides a summary of the data available in the database,
-    including the number of deals, partners, and sales, as well as the date range of the data.
-    In addition it will provide you some instructions on how to use the data safely and responsibly.
-    
-    Call this FIRST before running any other tools, as it will help you get an understanding of the
-    data and the business context.
-    
-    Do not write any SQL before calling this tool.
+    """Deze tool geeft uitleg over de data, de tabellen en de omzetafspraken.
+
+    Gebruik deze tool eerst, voordat je de andere tools aanroept. Zo baseer je je
+    antwoorden op dezelfde definities. Voer geen query uit voordat je deze context
+    hebt gelezen.
     """
     try:
         return CONTEXT_FILE.read_text(encoding="utf-8")
@@ -92,15 +87,11 @@ def data_context() -> str:
     
 @mcp.tool()
 def exploratory_data_analysis() -> str:
-    """This tool provides an exploratory data analysis of the database.
-    It will provide a summary of the tables, their structure, and some sample data.
-    It will also provide some basic statistics about the data, such as the number of rows in each table,
-    and the number of unique values in each column.
-    
-    Call this tool after calling the data_context tool, as it will help you get an understanding of the
-    data and the business context.
-    
-    Do not write any SQL before calling this tool.
+    """Deze tool laat de structuur en datakwaliteit van de brondatabase zien.
+
+    Je krijgt de tabellen, kolommen, aantallen, voorbeeldrijen en enkele basiscontroles
+    te zien. Lees eerst `data_context` en gebruik daarna pas deze tool. De voorbeeldrijen
+    laten geen klant-e-mailadressen of betaalreferenties zien.
     """
     try:
         with Session(engine_src) as session:
@@ -165,9 +156,10 @@ def exploratory_data_analysis() -> str:
 
 @mcp.tool()
 def src_sql(query: str):
-    """This tool allows you to run read-only SQL queries against the sourcedatabase.
-    It returns raw rows as a Python list of tuples so that downstream code can process the result
-    reliably. The helper is intentionally simple and safe for read-only analysis.
+    """Deze tool voert gerichte, alleen-lezen controles uit op de brondatabase.
+
+    De resultaten komen terug als een lijst met rijen. Haal geen klantgegevens of
+    betaalgegevens op en voer geen opdrachten uit die de database wijzigen.
     """
     try:
         with Session(engine_src) as session:
@@ -179,9 +171,10 @@ def src_sql(query: str):
 
 @mcp.tool()
 def clean_sql(query: str):
-    """This tool allows you to run read-only SQL queries against the clean database.
-    It returns raw rows as a Python list of tuples so that downstream code can process the result
-    reliably. The helper is intentionally simple and safe for read-only analysis.
+    """Deze tool voert gerichte, alleen-lezen controles uit op de clean database.
+
+    De resultaten komen terug als een lijst met rijen. Voer geen opdrachten uit die
+    de database wijzigen en toon `klant_id` niet in je antwoord.
     """
     try:
         with Session(engine_clean) as session:
@@ -198,7 +191,12 @@ clean_sql_tool = clean_sql
     
 @mcp.tool()
 def omzet_per_stad(start_date: str, end_date: str) -> str:
-    """Calculate revenue per city ID, showing location details for duplicate names."""
+    """Deze tool berekent de commissie per stad-ID voor de opgegeven inclusieve periode.
+
+    De uitvoer bevat ook de naam, het land en de regio, zodat steden met dezelfde
+    naam van elkaar te onderscheiden zijn. De berekening telt alleen betaalde
+    verkopen van niet-testpartners mee en gebruikt de Amsterdamse aankoopdatum.
+    """
     try:
         with Session(engine_clean) as session:
             city = cleandatabase.Stad
@@ -236,7 +234,7 @@ def omzet_per_stad(start_date: str, end_date: str) -> str:
 
 @mcp.tool()
 def omzet_per_partner(start_date: str, end_date: str, n: int = 5) -> str:
-    """Report the top N partner revenue totals by ID and by exact name and city."""
+    """Deze tool toont de top N-partners apart op ID en samengevoegd op naam en stad."""
     try:
         if n < 1:
             return "The number of partners (n) must be at least 1."
@@ -267,13 +265,10 @@ def omzet_per_partner(start_date: str, end_date: str, n: int = 5) -> str:
 
 @mcp.tool()
 def zoek_stad(naam: str) -> str:
-    """This tool allows you to search for a city by name in the clean database.
-    It will return the details of the city, including its ID, name, country, and region.
-    
-    Call this tool after calling the data_context and exploratory_data_analysis tools, as it will help you get an understanding of the
-    data and the business context.
-    
-    Do not write any SQL before calling these tools.
+    """Deze tool zoekt op een deel van de stadsnaam in de clean database.
+
+    De uitvoer bevat de stad-ID, naam, het land en de regio, zodat je steden met
+    dezelfde naam uit elkaar kunt houden. Lees eerst `data_context`.
     """
     try:
         with Session(engine_clean) as session:
@@ -300,13 +295,10 @@ def zoek_stad(naam: str) -> str:
 
 @mcp.tool()
 def zoek_partner(naam: str) -> str:
-    """This tool allows you to search for a partner by name in the clean database.
-    It will return the details of the partner, including its ID, name, and associated city.
-    
-    Call this tool after calling the data_context and exploratory_data_analysis tools, as it will help you get an understanding of the
-    data and the business context.
-    
-    Do not write any SQL before calling these tools.
+    """Deze tool zoekt op een deel van de partnernaam in de clean database.
+
+    De uitvoer bevat het partner-ID, de naam, de stad en het land. Lees eerst
+    `data_context`.
     """
     try:
         with Session(engine_clean) as session:
@@ -336,7 +328,7 @@ def zoek_partner(naam: str) -> str:
 
 @mcp.tool()
 def beschikbare_periode() -> str:
-    """This tool provides the available date range of the sales data in the clean database."""
+    """Deze tool toont de vroegste en laatste Amsterdamse aankoopdatum in de clean database."""
     try:
         with Session(engine_clean) as session:
             query = select(
@@ -355,7 +347,7 @@ def beschikbare_periode() -> str:
 
 @mcp.tool()
 def omzet_per_maand(start_date: str, end_date: str) -> str:
-    """This tool calculates the total revenue per month from the clean database."""
+    """Deze tool telt de commissie per maand op voor de opgegeven inclusieve periode."""
     try:
         with Session(engine_clean) as session:
             query = select(
@@ -382,7 +374,7 @@ def omzet_per_maand(start_date: str, end_date: str) -> str:
 
 @mcp.tool()
 def vergelijk_periode(start_date_1: str, end_date_1: str, start_date_2: str, end_date_2: str) -> str:
-    """This tool compares the total revenue between two specified periods from the clean database."""
+    """Deze tool vergelijkt de commissie van twee afzonderlijke inclusieve periodes."""
     try:
         with Session(engine_clean) as session:
             def total(period_start: str, period_end: str) -> int:
@@ -405,7 +397,7 @@ def vergelijk_periode(start_date_1: str, end_date_1: str, start_date_2: str, end
 
 @mcp.tool()
 def top_partners(start_date: str, end_date: str, n: int = 5) -> str:
-    """Show the top N partners separately by ID and combined by exact name and city."""
+    """Deze tool toont de top N-partners apart op ID en samengevoegd op naam en stad."""
     try:
         with Session(engine_clean) as session:
             reports = []
@@ -437,13 +429,11 @@ def top_partners(start_date: str, end_date: str, n: int = 5) -> str:
     
 @mcp.tool()
 def reconciliate_clean(start_datum: str, eind_datum: str) -> str:
-    """Reconcile clean revenue against common reporting mistakes for an inclusive date period.
+    """Deze tool vergelijkt de clean-omzet met een aantal veelvoorkomende rekenfouten.
 
-    The baseline is commission from paid, non-test sales, recognized on the Amsterdam-local
-    purchase date. Each alternative changes one reporting rule so its variance is attributable.
-    
-    Call this tool after calling the data_context and exploratory_data_analysis tools, 
-    as it will help you get an understanding of the data and the business context.
+    De basis is de commissie van betaalde verkopen bij niet-testpartners, op basis
+    van de Amsterdamse aankoopdatum. Elke alternatieve berekening wijzigt één regel,
+    zodat het verschil per fout zichtbaar is. De begin- en einddatum tellen mee.
     """
     try:
         with Session(engine_clean) as session:
@@ -547,16 +537,16 @@ def reconciliate_rapport(
     bedrag_cent: int,
     vouchers: int | None = None,
 ) -> str:
-    """Find reporting-rule combinations that explain a reported amount.
+    """Deze tool zoekt combinaties van rapportageregels die een opgegeven bedrag verklaren.
 
-    Use this when another team reports a discrepant figure. For the authoritative
-    revenue calculation and one-rule-at-a-time variances, use reconciliate_clean.
+    Gebruik deze tool als een ander team een afwijkend bedrag rapporteert. Gebruik
+    `reconciliate_clean` voor de juiste omzet en de verschillen per regel.
 
     Args:
-        start_datum: Inclusive period start in YYYY-MM-DD format.
-        eind_datum: Period end in YYYY-MM-DD format.
-        bedrag_cent: Reported revenue in integer cents.
-        vouchers: Optional reported voucher count to match alongside revenue.
+        start_datum: Begindatum in `YYYY-MM-DD`-formaat, inclusief.
+        eind_datum: Einddatum in `YYYY-MM-DD`-formaat, inclusief.
+        bedrag_cent: Het gerapporteerde omzetbedrag in hele centen.
+        vouchers: Optioneel aantal gerapporteerde vouchers; dit moet ook overeenkomen.
     """
     try:
         if not isinstance(start_datum, str) or not isinstance(eind_datum, str):

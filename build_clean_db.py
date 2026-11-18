@@ -1,35 +1,37 @@
 #!/usr/bin/env python3
 """
-Build a clean copy of the Social Deal database.
+Met dit script bouw ik een schone kopie van de Social Deal-database.
 
-The source database is only ever opened read-only. The clean database is rebuilt
-from scratch on every run, so the script is safe to run again at any time.
+Ik open de brondatabase alleen-lezen en bouw de clean database bij elke run
+opnieuw op. Ik kan het script dus opnieuw uitvoeren als ik de kopie opnieuw
+wil maken.
 
-Usage:
+Gebruik:
     python build_clean_db.py
 
-What the clean database contains:
+De clean database bevat:
     clean_steden, clean_partners, clean_deals, clean_verkopen
-        Same columns as the source tables, plus a few extra ones (see below).
-        Table and column names deliberately stay Dutch, so they match the source.
+        Dezelfde kolommen als de brontabellen, met een paar extra velden.
+        Ik houd de Nederlandse tabel- en kolomnamen aan zodat ze overeenkomen
+        met de bron.
     omzet_verkopen (view)
-        Only the sales that count towards revenue (paid and not from a test partner).
+        Alleen verkopen die meetellen voor omzet (betaald en geen testpartner).
     dq_log
-        A data-quality log: what was changed, and how many rows it affected.
+        Een overzicht van wat ik heb aangepast en hoeveel rijen dat raakte.
 
-What changes compared to the source:
-    - Customer email is replaced by a hashed `klant_id`. `klant_email` and
-      `betaalreferentie` are NOT copied, so the clean database holds no personal data.
-    - Status is normalized ("Betaald", "BETAALD", "betaald " -> "betaald").
-    - Broken UTF-8 text is repaired (e.g. "LiÃ¨ge" -> "Liège").
-    - Timestamps are converted to Amsterdam time.
-    - Extra columns on clean_verkopen:
+Dit pas ik aan ten opzichte van de bron:
+    - Ik vervang het e-mailadres door een gehashte `klant_id`. Ik kopieer
+      `klant_email` en `betaalreferentie` niet naar de clean database.
+    - Ik maak statussen gelijkvormig ("Betaald", "BETAALD", "betaald " -> "betaald").
+    - Ik herstel veelvoorkomende UTF-8-tekstproblemen (bijv. "LiÃ¨ge" -> "Liège").
+    - Ik zet tijdstempels om naar Amsterdamse tijd.
+    - Ik voeg aan clean_verkopen toe:
         klant_id, status_clean, partner_is_test, telt_mee_voor_omzet,
         aangemaakt_op_nl, verwerkt_op_nl
-    - Extra column on clean_deals: partner_is_test
+    - Ik voeg aan clean_deals het veld partner_is_test toe.
 
-At the end, the script compares the clean data with the source. If anything
-does not match, it stops and deletes the half-finished clean database.
+Aan het einde vergelijk ik de clean data met de bron. Als er iets niet klopt,
+stop ik en verwijder ik de onvolledige clean database.
 """
 
 import hashlib
@@ -69,7 +71,7 @@ BATCH_SIZE = 5000  # rows inserted per batch
 dq_counts = {}
 
 def log_change(description, row_count):
-    """Add row_count to the dq_log entry for this description."""
+    """Ik tel het aantal aangepaste rijen op voor deze regel in `dq_log`."""
     dq_counts[description] = dq_counts.get(description, 0) + row_count
 
 
@@ -79,8 +81,8 @@ def log_change(description, row_count):
 
 def fix_broken_text(value):
     """
-    Repair text where UTF-8 was wrongly read as cp1252 ("LiÃ¨ge" -> "Liège").
-    Anything that is not broken text is returned unchanged.
+    Ik herstel tekst die als cp1252 is gelezen in plaats van UTF-8
+    ("LiÃ¨ge" -> "Liège"). Tekst zonder dit probleem laat ik ongewijzigd.
     """
     if isinstance(value, str) and ("Ã" in value or "Â" in value):
         try:
@@ -91,7 +93,7 @@ def fix_broken_text(value):
 
 
 def normalize_status(raw_status):
-    """Return the status in lowercase without surrounding spaces."""
+    """Ik zet de status om naar kleine letters en haal buitenste spaties weg."""
     status = (raw_status or "").strip().lower()
     if status not in VALID_STATUSES:
         raise SystemExit(f"Unexpected status value: {raw_status!r}")
@@ -99,7 +101,7 @@ def normalize_status(raw_status):
 
 
 def to_amsterdam_time(timestamp):
-    """Convert a source timestamp (SOURCE_TZ) to Amsterdam time. None stays None."""
+    """Ik zet een brontijdstempel om naar Amsterdamse tijd; `None` laat ik zo."""
     if timestamp is None:
         return None
     parsed = datetime.strptime(timestamp, TIMESTAMP_FORMAT).replace(tzinfo=SOURCE_TZ)
@@ -108,8 +110,9 @@ def to_amsterdam_time(timestamp):
 
 def make_customer_id(email):
     """
-    Turn an email into an anonymous customer id (salted SHA-256, first 16 characters).
-    The email is lowercased and trimmed first, so "A@x.com " and "a@x.com" are the same customer.
+    Ik maak een gepseudonimiseerde klant-ID met gezouten SHA-256 (de eerste 16 tekens).
+    Ik maak het e-mailadres eerst klein en haal spaties weg. Zo krijgen
+    "A@x.com " en "a@x.com" dezelfde klant-ID.
     """
     normalized = (email or "").strip().lower()
     return hashlib.sha256((SALT + normalized).encode("utf-8")).hexdigest()[:16]
@@ -120,16 +123,16 @@ def make_customer_id(email):
 # --------------------------------------------------------------------------
 
 def get_source_columns(con, table):
-    """Return (name, type, is_primary_key) for every column of a source table."""
+    """Ik haal per bronkolom de naam, het type en de primary-keystatus op."""
     rows = con.execute(f'PRAGMA src.table_info("{table}")')
     return [(name, col_type or "", pk) for _, name, col_type, _, _, pk in rows]
 
 
 def create_clean_table(con, table, skip_columns=(), extra_columns=()):
     """
-    Create clean_<table> with the same columns as the source table,
-    minus skip_columns, plus extra_columns (a list of (name, type)).
-    Returns the list of copied column names, in order.
+    Ik maak `clean_<table>` met de bronkolommen, behalve de overgeslagen kolommen.
+    Daarna voeg ik de extra kolommen toe. Ik geef de gekopieerde kolomnamen terug,
+    in dezelfde volgorde.
     """
     copied = [c for c in get_source_columns(con, table) if c[0] not in skip_columns]
     primary_keys = [name for name, _, pk in copied if pk]
@@ -146,13 +149,13 @@ def create_clean_table(con, table, skip_columns=(), extra_columns=()):
 
 
 def insert_statement(table, column_count):
-    """Build 'INSERT INTO clean_<table> VALUES (?, ?, ...)' for column_count columns."""
+    """Ik maak een INSERT-opdracht met één placeholder per kolom."""
     placeholders = ",".join("?" * column_count)
     return f'INSERT INTO "clean_{table}" VALUES ({placeholders})'
 
 
 def flush(con, statement, batch):
-    """Insert the collected rows in one go and empty the batch."""
+    """Ik schrijf de verzamelde batch in één keer weg en maak hem daarna leeg."""
     con.executemany(statement, batch)
     batch.clear()
 
@@ -163,10 +166,10 @@ def flush(con, statement, batch):
 
 def copy_table_with_text_fix(con, table, extra_columns=(), join_sql="", extra_select=""):
     """
-    Copy a source table to clean_<table> and repair broken text in every value.
-    join_sql / extra_select let the caller add columns from another table
-    (used for clean_deals, which gets partner_is_test from partners).
-    Returns the number of rows copied.
+    Ik kopieer een brontabel naar `clean_<table>` en herstel tekstproblemen.
+    Met `join_sql` en `extra_select` kan ik velden uit een andere tabel toevoegen;
+    dat gebruik ik bijvoorbeeld om `partner_is_test` aan `clean_deals` toe te voegen.
+    Ik geef het aantal gekopieerde rijen terug.
     """
     columns = create_clean_table(con, table, extra_columns=extra_columns)
     select_list = ", ".join(f't."{c}"' for c in columns) + extra_select
@@ -185,9 +188,9 @@ def copy_table_with_text_fix(con, table, extra_columns=(), join_sql="", extra_se
 
 def build_clean_sales(con):
     """
-    Build clean_verkopen: every sale gets a customer id, a clean status,
-    a test-partner flag, a 'counts towards revenue' flag and Amsterdam timestamps.
-    Returns the number of rows written.
+    Ik bouw `clean_verkopen` met een klant-ID, opgeschoonde status,
+    testpartner-vlag, omzetvlag en Amsterdamse tijdstempels per verkoop.
+    Ik geef het aantal weggeschreven rijen terug.
     """
     extra_columns = [
         ("klant_id", "TEXT"),
@@ -253,7 +256,7 @@ def build_clean_sales(con):
 
 
 def build(con):
-    """Create all clean tables, indexes and the revenue view. Returns row counts per table."""
+    """Ik maak de clean tabellen, indexen en omzetview en geef de rij-aantallen terug."""
     row_counts = {
         "steden": copy_table_with_text_fix(con, "steden"),
         "partners": copy_table_with_text_fix(con, "partners"),
@@ -280,7 +283,7 @@ def build(con):
 # --------------------------------------------------------------------------
 
 def check(con, row_counts):
-    """Stop (AssertionError) if the clean database does not match the source."""
+    """Ik stop met een AssertionError als de clean database niet overeenkomt met de bron."""
 
     # 1. Same number of rows in every table.
     for table, copied_rows in row_counts.items():
@@ -324,7 +327,7 @@ def check(con, row_counts):
 # --------------------------------------------------------------------------
 
 def write_dq_log(con):
-    """Store dq_counts in the dq_log table, with timezone and timestamp of this run."""
+    """Ik sla de opschoonaantallen, brontijdzone en uitvoertijd op in `dq_log`."""
     con.execute(
         "CREATE TABLE dq_log (description TEXT, row_count INTEGER, source_tz TEXT, created_at TEXT)")
     created_at = datetime.now(TARGET_TZ).strftime(TIMESTAMP_FORMAT)

@@ -1,107 +1,107 @@
-# Business context: Social Deal revenue data
+# Mijn uitleg bij de Social Deal-data
 
-## Which database to use
+## Welke database gebruik ik?
 
-This project contains two SQLite databases:
+In deze casus werk ik met twee SQLite-databases:
 
-- `socialdeal_casus.sqlite` is the source database. It contains the original, intentionally imperfect data and customer-identifying columns.
-- `socialdeal_clean.sqlite` is the prepared copy for reporting. Use it for normal revenue answers. It excludes direct customer identifiers and adds normalized reporting fields.
+- `socialdeal_casus.sqlite` is de brondatabase. Hierin staat de originele, bewust niet helemaal schone data, inclusief kolommen met klantgegevens.
+- `socialdeal_clean.sqlite` is de opgeschoonde kopie die ik gebruik voor rapportages. Direct herkenbare klantgegevens zijn eruit gehaald en er zijn velden toegevoegd die rapporteren makkelijker maken.
 
-Use the named tools in `revenue.py` as the supported interface for this case. `src_sql` is scoped to the source database and `clean_sql` to the clean database. Do not assume that a separate, general-purpose SQL tool or broader database access is available.
+Ik gebruik de tools in `revenue.py` als interface voor deze casus. `src_sql` is gekoppeld aan de brondatabase en `clean_sql` aan de opgeschoonde database. Ik ga er niet van uit dat er ook een aparte, algemene SQL-tool of bredere database-toegang beschikbaar is.
 
-Use the query tools only for targeted, read-only inspection. Never submit modifying statements. Do not select or return direct identifiers from the source database.
+Ik gebruik de querytools alleen voor gerichte, alleen-lezen controles. Ik voer geen opdrachten uit die data wijzigen en haal geen direct herkenbare klantgegevens op uit de brondatabase. Ik zet zulke gegevens ook niet in uitvoer of logs.
 
-## Evidence and grounding
+## Zo wil ik dat antwoorden worden onderbouwd
 
-All of Claude's reasoning, explanations, and conclusions must be grounded in the actual data available in these databases or returned by the named tools. Do not invent values or present assumptions as facts. If the available data does not answer a question, say so clearly and identify what evidence is missing.
+Ik wil dat alle redeneringen, uitleg en conclusies steunen op gegevens die echt in deze databases staan of die de tools teruggeven. Ik verzin geen cijfers en presenteer aannames niet als feiten. Als de data geen antwoord geeft, benoem ik duidelijk wat er ontbreekt.
 
-## Source dataset
+## De brondataset
 
-`socialdeal_casus.sqlite` contains fictional data from October 2024 through September 2026, with approximately 97,000 sales.
+`socialdeal_casus.sqlite` bevat verzonnen gegevens van oktober 2024 tot en met september 2026, met ongeveer 97.000 verkopen.
 
-| Table | Approx. rows | Important columns |
+| Tabel | Aantal rijen (ongeveer) | Belangrijke kolommen |
 | --- | ---: | --- |
 | `steden` | 34 | `id`, `naam`, `land` (NL/BE), `regio` |
 | `partners` | 613 | `id`, `naam`, `stad_id`, `is_test` |
-| `deals` | 2,444 | `id`, `partner_id`, `titel`, `start_datum`, `eind_datum`, `prijs_cent`, `commissie_pct` |
-| `verkopen` | 96,947 | `id`, `deal_id`, `aangemaakt_op`, `verwerkt_op`, `status`, `aantal`, `klantprijs_cent`, `commissie_cent`, `klant_email`, `betaalreferentie` |
+| `deals` | 2.444 | `id`, `partner_id`, `titel`, `start_datum`, `eind_datum`, `prijs_cent`, `commissie_pct` |
+| `verkopen` | 96.947 | `id`, `deal_id`, `aangemaakt_op`, `verwerkt_op`, `status`, `aantal`, `klantprijs_cent`, `commissie_cent`, `klant_email`, `betaalreferentie` |
 
-Relationships:
+De tabellen zijn zo gekoppeld:
 
 - `verkopen.deal_id` → `deals.id`
 - `deals.partner_id` → `partners.id`
 - `partners.stad_id` → `steden.id`
 
-`klant_email` and `betaalreferentie` are personal or payment-related data. Never include them in a query result, tool output, error message, or log. Prefer the clean database for analysis.
+`klant_email` en `betaalreferentie` zijn persoonsgegevens of betaalgegevens. Ik gebruik ze niet in queryresultaten, tooluitvoer, foutmeldingen of logs. Voor analyses gebruik ik bij voorkeur de clean database.
 
-## Clean database
+## De clean database
 
-The clean database keeps the source names with a `clean_` prefix and adds reporting-oriented fields:
+De opgeschoonde database gebruikt dezelfde tabelnamen met het voorvoegsel `clean_` en bevat extra velden voor rapportages:
 
-| Table or view | Contents |
+| Tabel of view | Wat erin staat |
 | --- | --- |
-| `clean_steden` | `id`, `naam`, `land`, `regio`; text encoding issues are repaired where possible. |
-| `clean_partners` | `id`, `naam`, `stad_id`, `is_test`; partner names are repaired where possible. |
-| `clean_deals` | Source deal fields plus `partner_is_test`, copied from the associated partner. |
-| `clean_verkopen` | Sale fields excluding `klant_email` and `betaalreferentie`, plus the derived fields listed below. |
-| `omzet_verkopen` | View of `clean_verkopen` containing only rows where `telt_mee_voor_omzet = 1`. |
-| `dq_log` | Cleaning summary with `description`, `row_count`, `source_tz`, and `created_at`. |
+| `clean_steden` | `id`, `naam`, `land`, `regio`; tekstproblemen zijn waar mogelijk hersteld. |
+| `clean_partners` | `id`, `naam`, `stad_id`, `is_test`; tekstproblemen in partnernamen zijn waar mogelijk hersteld. |
+| `clean_deals` | De dealvelden uit de brondatabase, plus `partner_is_test` van de bijbehorende partner. |
+| `clean_verkopen` | Verkoopvelden zonder `klant_email` en `betaalreferentie`, plus de afgeleide velden hieronder. |
+| `omzet_verkopen` | Een view met alleen regels waarvoor `telt_mee_voor_omzet = 1`. |
+| `dq_log` | Overzicht van opschoonacties met `description`, `row_count`, `source_tz` en `created_at`. |
 
-Additional columns on `clean_verkopen`:
+In `clean_verkopen` zijn deze velden toegevoegd:
 
-- `klant_id`: pseudonymous, salted hash derived from the email. It is not needed for revenue reporting; treat it as sensitive and do not expose it.
-- `status_clean`: trimmed, lowercase status (`betaald`, `geannuleerd`, or `terugbetaald`).
-- `partner_is_test`: whether the sale belongs to a test partner.
-- `telt_mee_voor_omzet`: `1` only for paid sales from non-test partners; otherwise `0`.
-- `aangemaakt_op_nl` and `verwerkt_op_nl`: purchase and processing timestamps converted to Europe/Amsterdam time (the build script defaults to UTC as the source timezone).
+- `klant_id`: een gepseudonimiseerde, gezouten hash op basis van het e-mailadres. Voor omzetrapportages heb ik dit veld niet nodig; ik behandel het als gevoelig en toon het niet.
+- `status_clean`: opgeschoonde status in kleine letters (`betaald`, `geannuleerd` of `terugbetaald`), zonder spaties aan het begin of einde.
+- `partner_is_test`: geeft aan of de verkoop bij een testpartner hoort.
+- `telt_mee_voor_omzet`: is `1` voor betaalde verkopen van niet-testpartners, en anders `0`.
+- `aangemaakt_op_nl` en `verwerkt_op_nl`: aanmaak- en verwerkingstijd omgerekend naar Europe/Amsterdam. In het bouwscript ga ik standaard uit van UTC als brontijdzone.
 
-The build process repairs common broken text encoding, normalizes statuses, converts timestamps, omits direct customer identifiers, and records cleaning counts in `dq_log`. The clean database preserves the sale amounts as stored; it does not multiply them by voucher quantity.
+Bij het bouwen van de clean database herstel ik veelvoorkomende tekstproblemen, maak ik statussen gelijkvormig, zet ik tijdstempels om en laat ik directe klantgegevens weg. Ik sla de aantallen opgeschoonde waarden op in `dq_log`. De bedragen blijven zoals ze in de bron staan; ik vermenigvuldig ze niet met het aantal vouchers.
 
-## Reporting rules
+## De regels die ik voor omzet gebruik
 
-- Revenue means Social Deal's commission: sum `commissie_cent`. `klantprijs_cent` is the customer's purchase amount, not revenue.
-- Count only paid sales from non-test partners. In the clean database, use `telt_mee_voor_omzet = 1` or the `omzet_verkopen` view.
-- Attribute a sale to its purchase time (`aangemaakt_op`), not its processing time (`verwerkt_op`).
-- Use the Amsterdam-local purchase timestamp (`aangemaakt_op_nl`) for reporting dates.
-- Date ranges are inclusive: include both the start date and the end date.
-- A sale row can represent multiple vouchers (`aantal`). `commissie_cent` and `klantprijs_cent` are already totals for the row; do not multiply them by `aantal`.
-- Attribute a sale to the city of its partner.
-- Amounts are integer cents. Convert to euros only for presentation (divide by 100).
+- Omzet is de commissie van Social Deal: de som van `commissie_cent`. `klantprijs_cent` is wat de klant betaalt en is dus geen omzet.
+- Alleen betaalde verkopen van niet-testpartners tellen mee. In de clean database gebruik ik hiervoor `telt_mee_voor_omzet = 1` of de view `omzet_verkopen`.
+- Ik reken een verkoop toe aan het moment van kopen (`aangemaakt_op`), niet aan het moment van verwerken (`verwerkt_op`).
+- Voor rapportagedatums gebruik ik de Amsterdamse tijd in `aangemaakt_op_nl`.
+- De periode is inclusief: zowel de begin- als einddatum tellen mee.
+- Eén verkoopregel kan meerdere vouchers (`aantal`) bevatten. `commissie_cent` en `klantprijs_cent` zijn al totalen voor de hele regel; ik vermenigvuldig ze dus niet nog eens met `aantal`.
+- Ik reken een verkoop toe aan de stad van de partner.
+- Bedragen zijn gehele centen. Voor bedragen in euro's deel ik door 100.
 
-## Duplicate city names
+## Steden met dezelfde naam
 
-Some different city records share a name, such as Bergen and Laren. `omzet_per_stad` groups by city ID, not just by name, and includes the city ID, name, country, and region in each row. This keeps same-named cities separate and makes their locations clear.
+In de data komen verschillende steden met dezelfde naam voor, zoals Bergen en Laren. `omzet_per_stad` groepeert daarom op stad-ID en niet alleen op naam. De uitvoer laat ook de stad-ID, naam, het land en de regio zien, zodat ik de steden uit elkaar kan houden.
 
-## Duplicate partner names
+## Partners met dezelfde naam
 
-Partner names are not unique; the same name can occur under multiple partner IDs, including in the same city. The data does not establish whether those IDs represent one business or separate partner records.
+Partnernamen zijn niet uniek: dezelfde naam kan bij meerdere partner-ID's voorkomen, ook in dezelfde stad. Uit de data kan ik niet afleiden of die ID's bij hetzelfde bedrijf horen of bij aparte partnerregistraties.
 
-`omzet_per_partner` and `top_partners` therefore return two views for the requested period, each sorted by revenue descending:
+`omzet_per_partner` en `top_partners` geven daarom voor de gekozen periode twee overzichten, allebei gesorteerd op omzet van hoog naar laag:
 
-1. **Separate partners (by ID):** one row per partner ID, with its name and city. Use this view when identifying or comparing individual partner records.
-2. **Combined by exact partner name and city:** sums rows that have the same name and city. This is a useful roll-up, but it is not proof that the IDs belong to one real-world business. Names in different cities are not combined.
+1. **Partners apart op ID:** één regel per partner-ID, met de naam en stad. Ik gebruik dit overzicht als ik individuele partnerregistraties wil vergelijken.
+2. **Samengevoegd op exacte partnernaam en stad:** regels met precies dezelfde naam en stad worden bij elkaar opgeteld. Dat is handig als totaaloverzicht, maar bewijst niet dat de ID's bij hetzelfde bedrijf horen. Partners in verschillende steden voeg ik niet samen.
 
-Both tools limit each view separately. `omzet_per_partner` defaults to the top 5 rows per view and accepts an optional `n` to request more or fewer. `top_partners` also defaults to 5 per view. When discussing partner-level results, state which view is being used; prefer the ID-separated view when the distinction matters.
+Beide tools passen de limiet per overzicht toe. `omzet_per_partner` toont standaard de top 5 per overzicht; met `n` kan ik een ander aantal opvragen. `top_partners` gebruikt ook standaard 5 per overzicht. Als het verschil tussen partnerregistraties belangrijk is, gebruik ik het overzicht per ID.
 
-## Tools and when they are useful
+## De tools die ik gebruik
 
-Call `data_context` first to load these definitions before analyzing the data. Use the clean-data reporting tools for business answers; use source comparisons to investigate discrepancies, not as the authoritative finance total.
+Ik gebruik eerst `data_context`, zodat de regels en definities duidelijk zijn. Voor gewone omzetvragen gebruik ik de tools op de clean database. De reconciliatietools gebruik ik om verschillen te onderzoeken; hun alternatieve scenario's zijn niet de officiële omzetdefinitie.
 
-| Tool | Inputs | What it does and why it is useful |
+| Tool | Invoer | Wat ik ermee doe |
 | --- | --- | --- |
-| `data_context` | none | Returns this document. It establishes the schema, definitions, and safe-use rules so that later queries use the right database and revenue logic. |
-| `exploratory_data_analysis` | none | Reports source-table schemas, row counts, numeric distinct counts, null counts, and sample rows. Useful for initial schema and quality exploration. It omits `klant_email` and `betaalreferentie` from sample rows; use the clean database for further analysis. |
-| `src_sql` | `query` | Runs a targeted, read-only query against the original source database and returns rows. Useful for investigating raw values or diagnosing how the source differs from the clean copy. Never select personal or payment data. |
-| `clean_sql` | `query` | Runs a targeted, read-only query against the clean database and returns rows. Useful for checking cleaned values, validating a reporting calculation, or inspecting `dq_log`. Avoid `klant_id` unless an explicitly approved analysis requires it. |
-| `omzet_per_stad` | `start_date`, `end_date` | Sums eligible commission by city ID for an inclusive Amsterdam-local date range. Includes city ID, name, country, and region so same-named cities remain separate and distinguishable. |
-| `omzet_per_partner` | `start_date`, `end_date`, optional `n` (default 5) | Returns the top `n` partner-ID-separated totals and top `n` totals combined by exact name and city, sorted by revenue descending for an inclusive date range. Useful for comparing individual partner records with a concise name-based roll-up. |
-| `zoek_stad` | `naam` | Searches city names by partial match and returns city ID, name, country, and region. Useful for resolving a city name before analyzing it. |
-| `zoek_partner` | `naam` | Searches partner names by partial match and returns partner ID, name, city, and country. Useful for identifying a partner and its location. |
-| `beschikbare_periode` | none | Returns the earliest and latest Amsterdam-local purchase timestamps in the clean sales table. Useful for checking whether a requested date range is covered by the data. |
-| `omzet_per_maand` | `start_date`, `end_date` | Groups eligible commission into months within an inclusive date range. Useful for seeing trends and seasonality without querying every day separately. |
-| `vergelijk_periode` | `start_date_1`, `end_date_1`, `start_date_2`, `end_date_2` | Calculates eligible commission for two independently specified inclusive date ranges. Useful for like-for-like period comparisons. |
-| `top_partners` | `start_date`, `end_date`, optional `n` (default 5) | Returns the top `n` partner IDs and the top `n` exact name-and-city groups by eligible commission in an inclusive date range. Useful for finding leading contributors without silently merging duplicate names. |
-| `reconciliate_clean` | `start_datum`, `eind_datum` | Calculates the clean-data baseline and the variance from several one-rule-at-a-time alternatives, such as using processing date, including test partners, using customer price, multiplying by voucher quantity, or excluding the end date. Useful for explaining a discrepancy and quantifying common reporting mistakes. |
-| `reconciliate_rapport` | `start_datum`, `eind_datum`, `bedrag_cent`, optional `vouchers` | Tries all 128 combinations of purchase/processing date, Amsterdam/raw timestamp, test-partner inclusion, status inclusion, end-date handling, commission/customer price, and quantity multiplication. It returns every exact amount match (and requires the voucher count to match too, if supplied), ordered by fewest deviations from the reporting rules. If there is no exact match, it returns the three closest amounts, with voucher differences when a count was supplied. Useful when another team reports a discrepancy and you want to test combinations of mistakes. This is diagnostic only; use `reconciliate_clean` for the authoritative baseline. |
+| `data_context` | geen | Geeft deze uitleg terug. Zo staan de tabellen, definities en afspraken bij elkaar voordat ik de andere tools gebruik. |
+| `exploratory_data_analysis` | geen | Geeft de schema's, aantallen rijen, aantallen unieke numerieke waarden, aantallen NULL-waarden en enkele voorbeeldrijen uit de brondatabase. Ik gebruik dit om de structuur en datakwaliteit te verkennen. `klant_email` en `betaalreferentie` worden niet in de voorbeeldrijen getoond. |
+| `src_sql` | `query` | Voert een gerichte, alleen-lezen query uit op de brondatabase. Ik gebruik dit om ruwe waarden te onderzoeken of verschillen met de clean database na te gaan. Ik haal nooit persoonsgegevens of betaalgegevens op. |
+| `clean_sql` | `query` | Voert een gerichte, alleen-lezen query uit op de clean database. Ik gebruik dit om opgeschoonde waarden te controleren, berekeningen te valideren of `dq_log` te bekijken. Ik toon `klant_id` niet, tenzij een analyse dat nadrukkelijk vereist. |
+| `omzet_per_stad` | `start_date`, `end_date` | Telt de meetellende commissie per stad-ID op voor een inclusieve periode in Amsterdamse tijd. De stad-ID, naam, het land en de regio houden gelijknamige steden uit elkaar. |
+| `omzet_per_partner` | `start_date`, `end_date`, optioneel `n` (standaard 5) | Geeft voor de inclusieve periode zowel de top `n` per partner-ID als de top `n` samengevoegde regels per exacte naam en stad. Ik gebruik dit om losse partnerregistraties naast een naamoverzicht te leggen. |
+| `zoek_stad` | `naam` | Zoekt op een deel van een stadsnaam en toont de stad-ID, naam, land en regio. Ik gebruik dit om een stadsnaam te controleren voordat ik cijfers opvraag. |
+| `zoek_partner` | `naam` | Zoekt op een deel van een partnernaam en toont partner-ID, naam, stad en land. Ik gebruik dit om te zien bij welke stad een partner hoort. |
+| `beschikbare_periode` | geen | Toont de vroegste en laatste Amsterdamse aanmaaktijd in de clean verkoopdata. Ik controleer hiermee of de gevraagde periode in de dataset valt. |
+| `omzet_per_maand` | `start_date`, `end_date` | Groepeert de meetellende commissie per maand binnen een inclusieve periode. Ik gebruik dit om trends en seizoenspatronen te bekijken. |
+| `vergelijk_periode` | `start_date_1`, `end_date_1`, `start_date_2`, `end_date_2` | Berekent de meetellende commissie voor twee afzonderlijke inclusieve periodes. Ik gebruik dit om periodes met elkaar te vergelijken. |
+| `top_partners` | `start_date`, `end_date`, optioneel `n` (standaard 5) | Geeft de top `n` partner-ID's en de top `n` exacte groepen van naam en stad op basis van commissie in een inclusieve periode. Zo zie ik wie het meest bijdraagt, zonder gelijknamige partners stilzwijgend samen te voegen. |
+| `reconciliate_clean` | `start_datum`, `eind_datum` | Geeft de omzet volgens de clean-dataregels en het verschil met een aantal veelvoorkomende alternatieven. Ik gebruik dit om te zien hoeveel een andere datum, testpartners, klantprijs, voucherhoeveelheid of einddatumregel uitmaakt. |
+| `reconciliate_rapport` | `start_datum`, `eind_datum`, `bedrag_cent`, optioneel `vouchers` | Probeert alle 128 combinaties van datumsoort en tijdzone, testpartner- en statuskeuze, einddatum, commissie of klantprijs, en wel of niet vermenigvuldigen met het aantal vouchers. Ik krijg alle exacte verklaringen terug, met de minste afwijkingen eerst. Als ik ook vouchers opgeef, moeten bedrag én aantal vouchers overeenkomen. Zonder exacte match toont de tool de drie bedragen die er het dichtst bij zitten. Ik gebruik dit alleen om verschillen te onderzoeken; voor het juiste basisbedrag gebruik ik `reconciliate_clean`. |
 
-All date inputs should be ISO dates in `YYYY-MM-DD` form. If a tool reports no matching data, verify the date range and spelling before drawing a conclusion.
+Ik geef datums op als `YYYY-MM-DD`. Als er geen resultaten zijn, controleer ik eerst de periode en spelling voordat ik conclusies trek.
