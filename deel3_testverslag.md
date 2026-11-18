@@ -1,10 +1,10 @@
-# Deel 3: hoe ik Claude met de MCP-tools heb getest
+# Deel 3: Claude testen met de MCP-tools
 
 ## Opzet
 
-- Ik stelde Claude de vijf vragen met de MCP-server van de starterkit gekoppeld. Claude kon alle tools gebruiken (onder andere `omzet_per_stad`, `omzet_per_maand`, `top_partners` en `clean_sql`), dus niet alleen `omzet_per_stad`.
-- In de vragen noemde ik geen periode. Claude gebruikte de hele dataset (oktober 2024 t/m september 2026).
-- Ik controleerde elk antwoord met een eigen SQL-query op de clean database.
+- Claude kreeg de vijf vragen met de MCP-server van de starterkit gekoppeld. Alle tools waren beschikbaar, waaronder `omzet_per_stad`, `omzet_per_maand`, `top_partners` en `clean_sql`; de test beperkte zich dus niet tot `omzet_per_stad`.
+- De vragen noemden geen periode. Claude gebruikte daarom de hele dataset (oktober 2024 t/m september 2026).
+- Elk antwoord is gecontroleerd met een SQL-query op de clean database.
 
 ## De vijf vragen
 
@@ -20,13 +20,13 @@
 
 Er ging weinig mis: de antwoorden klopten met de database. Wel vielen me drie dingen op:
 
-1. **Ik noemde geen periode.** Claude koos daarom zelf de hele dataset en benoemde die aanname.
-2. **Mijn vragen waren dubbelzinnig.** "Winst", "uitgave" en "opbrengst voor partners" kunnen meerdere dingen betekenen. Claude legde uit welke betekenis het koos.
-3. **Voor de verklaring had ik meer dan één tool nodig.** Voor vraag 4 en 5 (verkopen en partners per maand) gebruikte ik SQL. `omzet_per_maand` geeft alleen de omzet.
+1. **Er was geen periode genoemd.** Claude koos daarom zelf de hele dataset en benoemde die aanname.
+2. **De vragen waren dubbelzinnig.** "Winst", "uitgave" en "opbrengst voor partners" kunnen meerdere dingen betekenen. Claude legde uit welke betekenis het koos.
+3. **Voor de verklaring waren meerdere tools nodig.** Voor vraag 4 en 5 (verkopen en partners per maand) was SQL nodig, omdat `omzet_per_maand` alleen de omzet geeft.
 
-## Wat ik aanpaste
+## Aanpassing
 
-- **`business_context` aangepast:** ik heb erin gezet dat antwoorden moeten steunen op de cijfers uit de database, niet op aannames.
+- In `business_context` staat nu dat antwoorden moeten steunen op cijfers uit de database, niet op aannames.
 
 ## Mogelijke verbeteringen (nog niet doorgevoerd)
 
@@ -35,4 +35,4 @@ Er ging weinig mis: de antwoorden klopten met de database. Wel vielen me drie di
 
 ## Beperking
 
-Ik heb getest met alle starterkit-tools gekoppeld. Ik heb niet getest met alleen mijn eigen `omzet_per_stad` uit deel 1.
+De test is uitgevoerd met alle starterkit-tools gekoppeld. De eigen tool `omzet_per_stad` uit deel 1 is niet afzonderlijk getest.
